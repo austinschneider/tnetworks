@@ -15,6 +15,8 @@ struct Tensor {
     T & at(Coordinates &);
 
     Tensor(Geometry &);
+
+    static Tensor<T> contract(std::vector<Tensor<T> > &);
 };
 
 #endif
