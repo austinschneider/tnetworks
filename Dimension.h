@@ -2,9 +2,10 @@
 #define DIMENSION_H_
 
 struct Dimension {
-    typedef unsigned long int ID;
-    unsigned int size;
-    ID id;
+  typedef unsigned long int ID;
+  unsigned int size;
+  ID id;
+  Dimension(unsigned int, ID);
 };
 
 #endif

@@ -4,19 +4,25 @@
 #include <vector>
 
 #include "Dimension.h"
+#include "ContractionIterator.h"
 
 template <class T>
 struct Tensor {
-    typedef std::vector<Dimension> Geometry;
-    typedef std::vector<unsigned int> Coordinates;
-    T * elements;
-    Geometry geometry;
-    unsigned int size();
-    T & at(Coordinates &);
+  typedef std::vector<Dimension> Geometry;
+  typedef std::vector<unsigned int> Coordinates;
+  T * elements;
+  Geometry geometry;
+  unsigned int size();
+  T & at(Coordinates &);
+  T & at(ContractionIterator &);
 
-    Tensor(Geometry &);
+  void zero();
 
-    static Tensor<T> contract(std::vector<Tensor<T> > &);
+  Tensor(Geometry &);
+
+  static Tensor<T> contract(std::vector<Tensor<T> > &);
 };
+
+#include "Tensor.tcc"
 
 #endif
