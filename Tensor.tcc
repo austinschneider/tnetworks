@@ -2,6 +2,7 @@
 #define TENSOR_TCC_
 
 #include "Tensor.h"
+#include "Utilities.h"
 #include "Dimension.h"
 #include "ContractionIterator.h"
 
@@ -20,22 +21,22 @@ unsigned int Tensor<T>::size() {
 }
 
 template <class T>
-T & Tensor<T>::at(Tensor<T>::Coordinates & coord) {
-  if(coord.size() != geometry.size())
-    std::cout << "ERROR: Coordinate size does not match geometry!" << std::endl;
-  unsigned int total = 0;
-  unsigned int product = 1;
-  for(int i=0; i<geometry.size(); ++i) {
-    if(coord[i] >= geometry[i].size)
-      std::cout << "ERROR: Out of bounds coordinate!" << std::endl;
-    total += product*coord[i];
-    product *= geometry[i].size;
+T & Tensor<T>::at(Coordinates & coord) {
+  std::cout << "X" << std::endl;
+  unsigned int I = coordinate_transoform_nd_to_1d(geometry, coord);
+  Coordinates coord_result = coordinate_transoform_1d_to_nd(geometry, I);
+  if(coord_result.size() != coord.size())
+    std::cout << "ERROR: Coordinate size mismatch!" << std::endl;
+  for(int i=0; i<coord_result.size(); ++i) {
+    if(coord_result[i] != coord[i])
+    std::cout << "ERROR: Coordinate mismatch!" << std::endl;
   }
-  return elements[total];
+  return elements[coordinate_transoform_nd_to_1d(geometry, coord)];
 }
 
 template <class T>
 T & Tensor<T>::at(ContractionIterator & it) {
+  std::cout << "X" << std::endl;
   unsigned int total = 0;
   unsigned int product = 1;
   for(int i=0; i<geometry.size(); ++i) {

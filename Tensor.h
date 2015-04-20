@@ -6,10 +6,11 @@
 #include "Dimension.h"
 #include "ContractionIterator.h"
 
+typedef std::vector<Dimension> Geometry;
+typedef std::vector<unsigned int> Coordinates;
+
 template <class T>
 struct Tensor {
-  typedef std::vector<Dimension> Geometry;
-  typedef std::vector<unsigned int> Coordinates;
   T * elements;
   Geometry geometry;
   unsigned int size();

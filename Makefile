@@ -10,7 +10,7 @@ CC          =  g++
 OPT         = -O3 
 LDFLAGS     = -lm
 
-SRC         = *.cc
+SRC         = *.cc ./redsvd/*.cpp
 OBJS        = $*(SRC).o
 
 # compilation for runs
