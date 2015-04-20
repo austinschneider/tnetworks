@@ -11,6 +11,7 @@
 #include "redsvd/redsvd.hpp"
 #include "redsvd/util.hpp"
 
+#include "UID.h"
 #include "Tensor.h"
 
 unsigned int coordinate_transoform_nd_to_1d(Geometry &, Coordinates &);
@@ -80,7 +81,7 @@ Tensor<T> fold(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix, Geometry
 
 
 template <class T>
-void HOSVD(Tensor<T> & t) {
+void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   M transforms[t.geometry.size()];
   for(int i=0; i<t.geometry.size(); ++i) {
@@ -99,9 +100,19 @@ void HOSVD(Tensor<T> & t) {
 
   M S_unfolded = transforms[axis].adjoint() * t_unfolded * B;
 
-  Tensor<T> S = fold(S_unfolded, t.geometry, axis);
+  S = fold(S_unfolded, t.geometry, axis);
 
+  Geometry matrix_geo;
+  matrix_geo.push_back(Dimension(0, 0));
+  matrix_geo.push_back(Dimension(0, 0));
   for(int i=0; i<t.geometry.size(); ++i) {
+    UID::ID id = UID::get_id();
+    S.geometry[i].id = id;
+    matrix_geo[0].size = t.geometry[i].size;
+    matrix_geo[1].size = t.geometry[i].size;
+    matrix_geo[0].id = t.geometry[i].id;
+    matrix_geo[1].id = id;
+    U[i] = fold(transforms[i], matrix_geo, 0);
     std::cout << transforms[i] << std::endl << std::endl;
   }
 

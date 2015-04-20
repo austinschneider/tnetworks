@@ -19,6 +19,7 @@ struct Tensor {
 
   void zero();
 
+  Tensor();
   Tensor(Geometry &);
 
   static Tensor<T> contract(std::vector<Tensor<T> > &);

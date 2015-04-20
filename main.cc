@@ -3,15 +3,16 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
+#include "UID.h"
 #include "Tensor.h"
 #include "Dimension.h"
 #include "redsvd/redsvd.hpp"
 #include "redsvd/util.hpp"
 
 int main() {
-    Dimension i(3, 0);
-    Dimension j(3, 1);
-    Dimension k(3, 2);
+    Dimension i(3, UID::get_id());
+    Dimension j(3, UID::get_id());
+    Dimension k(3, UID::get_id());
 
     std::vector<unsigned int> coord;
     coord.push_back(0); coord.push_back(0);
@@ -39,7 +40,13 @@ int main() {
     }
 
     std::cout << unfold(t2, 0) << std::endl;
-    HOSVD(t2);
+    Tensor<double> repeat = fold(unfold(t2, 0), t2.geometry, 0);
+    std::cout << unfold(repeat, 0) << std::endl;
+
+    Tensor<double> S;
+    Tensor<double> U[t2.geometry.size()];
+
+    HOSVD(t2, S, U);
 
     return 0;
 }

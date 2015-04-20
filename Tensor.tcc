@@ -57,6 +57,11 @@ void Tensor<T>::zero() {
 }
 
 template <class T>
+Tensor<T>::Tensor() {
+  elements = NULL;
+}
+
+template <class T>
 Tensor<T>::Tensor(Geometry & geo) {
   geometry = geo;
   elements = new T[this->size()];
