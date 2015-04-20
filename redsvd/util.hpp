@@ -50,4 +50,6 @@ private:
 
 }
 
+#include "util.tpp"
+
 #endif // REDSVD_UTIL_HPP_

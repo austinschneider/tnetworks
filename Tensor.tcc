@@ -22,7 +22,6 @@ unsigned int Tensor<T>::size() {
 
 template <class T>
 T & Tensor<T>::at(Coordinates & coord) {
-  std::cout << "X" << std::endl;
   unsigned int I = coordinate_transoform_nd_to_1d(geometry, coord);
   Coordinates coord_result = coordinate_transoform_1d_to_nd(geometry, I);
   if(coord_result.size() != coord.size())
@@ -36,7 +35,6 @@ T & Tensor<T>::at(Coordinates & coord) {
 
 template <class T>
 T & Tensor<T>::at(ContractionIterator & it) {
-  std::cout << "X" << std::endl;
   unsigned int total = 0;
   unsigned int product = 1;
   for(int i=0; i<geometry.size(); ++i) {

@@ -17,6 +17,9 @@
  *      software without specific prior written permission.
  */
 
+#ifndef REDSVD_UTIL_TPP_H_
+#define REDSVD_UTIL_TPP_H_
+
 #include <iostream>
 #include <sys/time.h>
 
@@ -104,3 +107,5 @@ void Util<T>::convertFV2Mat(const vector<fv_t>& fvs, REDSVD::Util<T>::SMatrixXf&
 
 
 }
+
+#endif

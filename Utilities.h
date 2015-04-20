@@ -48,13 +48,64 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned 
 };
 
 template <class T>
+Tensor<T> fold(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix, Geometry & geometry, unsigned int dim) {
+  typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
+  unsigned int dim_size = matrix.rows();
+  unsigned int m_dim_size = matrix.cols();
+
+  Tensor<T> t(geometry);
+
+  Geometry g;
+  for(int i=0; i<t.geometry.size(); ++i) {
+    if(i != dim)
+      g.push_back(t.geometry[i]);
+  }
+
+  Coordinates coords_nd[m_dim_size];
+  for(int j=0; j<m_dim_size; ++j) {
+    coords_nd[j] = coordinate_transoform_1d_to_nd(g, j);
+    coords_nd[j].insert(coords_nd[j].begin()+dim, j);
+  }
+
+  for(int i=0; i<dim_size; ++i) {
+    for(int j=0; j<m_dim_size; ++j) {
+      coords_nd[j][dim] = i;
+      t.at(coords_nd[j]) = matrix(i, j);
+    }
+  }
+
+  return t;
+}
+
+
+
+template <class T>
 void HOSVD(Tensor<T> & t) {
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
-  REDSVD::RedSVD<T> svds[t.geometry.size()];
+  M transforms[t.geometry.size()];
   for(int i=0; i<t.geometry.size(); ++i) {
     M A = unfold(t, i);
-    svds[i] = REDSVD::RedSVD<T>(A, A.cols());
+    transforms[i] = REDSVD::RedSVD<T>(A, A.cols()).matrixU();
   }
+
+  unsigned int axis = 0;
+  M t_unfolded = unfold(t, axis);
+  M B(1,1);
+  B(0,0) = 1;
+  for(int i=0; i<t.geometry.size(); ++i) {
+    if(i != axis)
+      B = kroneckerProduct(B,transforms[i]).eval();
+  }
+
+  M S_unfolded = transforms[axis].adjoint() * t_unfolded * B;
+
+  Tensor<T> S = fold(S_unfolded, t.geometry, axis);
+
+  for(int i=0; i<t.geometry.size(); ++i) {
+    std::cout << transforms[i] << std::endl << std::endl;
+  }
+
+
 };
 
 #endif
