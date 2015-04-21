@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
+#include <set>
 #include <vector>
 #include <iostream>
 
@@ -13,10 +14,51 @@
 
 #include "UID.h"
 #include "Tensor.h"
+#include "IndexGroup.h"
 
 unsigned int coordinate_transoform_nd_to_1d(Geometry &, Coordinates &);
 
 Coordinates coordinate_transoform_1d_to_nd(Geometry &, unsigned int);
+
+unsigned int coordinate_transoform_nd_to_1d(Geometry &, IndexGroup &, Coordinates &);
+
+Coordinates coordinate_transoform_1d_to_nd(Geometry &, IndexGroup &, unsigned int);
+
+void coordinate_transform(Geometry &, Geometry &, std::vector<IndexGroup> &, Coordinates &, Coordinates &);
+
+
+// Unfinished
+template <class T>
+void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
+  std::set<unsigned int> unchanges_indices;
+
+  for(int i=0; i<t.geometry.size(); ++i) {
+    unchanges_indices.insert(i);
+  }
+  for(int i=0; i<reductions.size(); ++i) {
+    for(int j=0; j<reductions[i].size; ++j) {
+      unchanges_indices.erase(i);
+    }
+  }
+
+  std::vector<IndexGroup> igs;
+
+  for(std::set<unsigned int>::iterator it = unchanges_indices.begin(); it != unchanges_indices.end(); ++it) {
+    IndexGroup ig(1);
+    ig.is_forward = true;
+    ig.index = *it;
+    (&ig.indices) = igs.size();
+    igs.push_back(ig);
+  }
+
+  for(int i=0; i<reductions.size(); ++i) {
+    IndexGroup & ig = reductions[i];
+    ig.is_forward = false;
+
+  }
+
+  Tensor<T> result;
+}
 
 template <class T>
 Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned int dim) {
