@@ -10,8 +10,8 @@ ContractionIterator & ContractionIterator::operator++() {
         is_done = true;
     }
     else {
-      break;
       last_is_unique = i < n_unique_indices;
+      break;
     }
   }
   return *this;

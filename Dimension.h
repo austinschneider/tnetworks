@@ -5,6 +5,7 @@ struct Dimension {
   typedef unsigned long int ID;
   unsigned int size;
   ID id;
+  Dimension();
   Dimension(unsigned int, ID);
 };
 

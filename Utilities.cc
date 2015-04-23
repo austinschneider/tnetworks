@@ -6,7 +6,8 @@ unsigned int coordinate_transoform_nd_to_1d(Geometry & geometry, Coordinates & c
     std::cout << "ERROR: Coordinate size does not match geometry!" << std::endl;
   unsigned int total = 0;
   unsigned int product = 1;
-  for(int i=0; i<geometry.size(); ++i) {
+  //for(int i=0; i<geometry.size(); ++i) {
+  for(int i=geometry.size() - 1; i>=0; --i) {
     if(coord[i] >= geometry[i].size)
       std::cout << "ERROR: Out of bounds coordinate!" << std::endl;
     total += product*coord[i];
@@ -16,10 +17,11 @@ unsigned int coordinate_transoform_nd_to_1d(Geometry & geometry, Coordinates & c
 }
 
 Coordinates coordinate_transoform_1d_to_nd(Geometry & geometry, unsigned int I) {
-  Coordinates coord;
+  Coordinates coord(geometry.size(), 0);
   unsigned int total = I;
-  for(int i=0; i<geometry.size(); ++i) {
-    coord.push_back(total % geometry[i].size);
+  //for(int i=0; i<geometry.size(); ++i) {
+  for(int i=geometry.size() - 1; i>=0; --i) {
+    coord[i] = total % geometry[i].size;
     total /= geometry[i].size;
   }
   return coord;
@@ -32,7 +34,8 @@ unsigned int coordinate_transoform_nd_to_1d(Geometry & geometry, IndexGroup & ig
     std::cout << "ERROR: IndexGroup size is larger than geometry!" << std::endl;
   unsigned int total = 0;
   unsigned int product = 1;
-  for(int i=0; i<ig.size; ++i) {
+  //for(int i=0; i<ig.size; ++i) {
+  for(int i=ig.size - 1; i>=0; --i) {
     if(coord[ig[i]] >= geometry[ig[i]].size)
       std::cout << "ERROR: Out of bounds coordinate!" << std::endl;
     total += product*coord[ig[i]];
@@ -42,9 +45,10 @@ unsigned int coordinate_transoform_nd_to_1d(Geometry & geometry, IndexGroup & ig
 }
 
 Coordinates coordinate_transoform_1d_to_nd(Geometry & geometry, IndexGroup & ig, unsigned int I) {
-  Coordinates coord(ig.size);
+  Coordinates coord(ig.size, 0);
   unsigned int total = I;
-  for(int i=0; i<ig.size; ++i) {
+  //for(int i=0; i<ig.size; ++i) {
+  for(int i=ig.size - 1; i>=0; --i) {
     coord[i] = total % geometry[ig[i]].size;
     total /= geometry[ig[i]].size;
   }

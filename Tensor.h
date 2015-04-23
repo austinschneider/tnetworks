@@ -21,6 +21,8 @@ struct Tensor {
 
   Tensor();
   Tensor(Geometry &);
+  Tensor(const Tensor<T> &);
+  ~Tensor();
 
   static Tensor<T> contract(std::vector<Tensor<T> > &);
 };

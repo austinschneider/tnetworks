@@ -37,7 +37,7 @@ template <class T>
 T & Tensor<T>::at(ContractionIterator & it) {
   unsigned int total = 0;
   unsigned int product = 1;
-  for(int i=0; i<geometry.size(); ++i) {
+  for(int i=geometry.size() - 1; i>=0; --i) {
     std::map<Dimension::ID, unsigned int>::iterator m_it = it.indices_map.find(geometry[i].id);
     if(m_it == it.indices_map.end())
       std::cout << "ERROR: ContractionIterator does not contain index!" << std::endl;
@@ -65,6 +65,17 @@ template <class T>
 Tensor<T>::Tensor(Geometry & geo) {
   geometry = geo;
   elements = new T[this->size()];
+}
+
+template <class T>
+Tensor<T>::Tensor(const Tensor<T> & other) {
+  elements = other.elements;
+  geometry = other.geometry;
+}
+
+template <class T>
+Tensor<T>::~Tensor() {
+
 }
 
 template <class T>
@@ -100,6 +111,7 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
   }
 
   Tensor<T> result(c_it.indices);
+  result.zero();
 
   for(std::set<ID>::iterator it = contracted_indices_set.begin(); it != contracted_indices_set.end(); ++it) {
     c_it.indices_map[*it] = 0;
@@ -108,17 +120,50 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
 
   T * total = NULL;
 
+  for(int t_i=0; t_i<tensors.size(); ++t_i) {
+    std::cout << "Tensor" << t_i << ": ";
+    for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
+      std::cout << tensors[t_i].geometry[dim_i].id << " ";
+    }
+    std::cout << std::endl;
+  }
+
+  //UID::ID a = tensors[0].geometry[0].id;
+  //tensors[0].geometry[0].id = tensors[0].geometry[2].id;
+  //tensors[0].geometry[2].id = a;
+
+  unsigned int multiply_count = 0;
+  unsigned int add_count = 0;
+  int unique_element = -1;
   for(; c_it.is_done == false; ++c_it) {
+    for(int i=0; i<c_it.indices.size(); ++i)
+      std::cout << c_it.indices[i].id << ": " << c_it.indices_map[c_it.indices[i].id] << ", ";
+    std::cout << std::endl;
     if(c_it.last_is_unique) {
+      if(unique_element >= 0) {
+        std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
+        std::cout << *total << std::endl;
+      }
+      multiply_count = 0;
+      add_count = 0;
+      ++unique_element;
       total = & result.at(c_it);
     }
 
     T product = 1;
+    std::cout << "\t";
     for(int t_i=0; t_i<tensors.size(); ++t_i) {
-      product *= tensors[t_i].at(c_it);
+      T temp = tensors[t_i].at(c_it);
+      std::cout << temp << " * ";
+      product *= temp;
+      ++multiply_count;
     }
+    std::cout << std::endl << "\t\t+" << std::endl;
     (*total) += product;
+    ++add_count;
   }
+  std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
+  std::cout << *total << std::endl;
   return result;
 }
 

@@ -9,8 +9,9 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/unsupported/Eigen/KroneckerProduct>
 
-#include "redsvd/redsvd.hpp"
-#include "redsvd/util.hpp"
+//#include "redsvd/redsvd.hpp"
+//#include "redsvd/util.hpp"
+#include <eigen3/Eigen/SVD>
 
 #include "UID.h"
 #include "Tensor.h"
@@ -54,6 +55,8 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
   for(int i=0; i<reductions.size(); ++i) {
     IndexGroup & ig = reductions[i];
     ig.is_forward = false;
+    ig.index = igs.size();
+    igs.push_back(ig);
 
   }
 
@@ -66,10 +69,13 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned 
   unsigned int dim_size = t.geometry[dim].size;
   unsigned int m_dim_size = t.size() / dim_size;
 
-  Geometry g;
+  Geometry g(t.geometry.size() - 1, Dimension());
+  int ii=0;
   for(int i=0; i<t.geometry.size(); ++i) {
-    if(i != dim)
-      g.push_back(t.geometry[i]);
+    if(i != dim) {
+      g[ii] = t.geometry[i];
+      ++ii;
+    }
   }
 
   M result(dim_size, m_dim_size);
@@ -77,7 +83,7 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned 
   Coordinates coords_nd[m_dim_size];
   for(int j=0; j<m_dim_size; ++j) {
     coords_nd[j] = coordinate_transoform_1d_to_nd(g, j);
-    coords_nd[j].insert(coords_nd[j].begin()+dim, j);
+    coords_nd[j].insert(coords_nd[j].begin()+dim, 0);
   }
 
   for(int i=0; i<dim_size; ++i) {
@@ -120,15 +126,16 @@ Tensor<T> fold(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix, Geometry
   return t;
 }
 
-
-
 template <class T>
 void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   M transforms[t.geometry.size()];
+  std::cout << "Unfolded:" << std::endl;
   for(int i=0; i<t.geometry.size(); ++i) {
     M A = unfold(t, i);
-    transforms[i] = REDSVD::RedSVD<T>(A, A.cols()).matrixU();
+    std::cout << A << std::endl << std::endl;
+    //transforms[i] = REDSVD::RedSVD<T>(A, A.cols()).matrixU().eval();
+    transforms[i] = Eigen::JacobiSVD<M>(A, Eigen::ComputeFullU).matrixU();
   }
 
   unsigned int axis = 0;
@@ -142,22 +149,47 @@ void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
 
   M S_unfolded = transforms[axis].adjoint() * t_unfolded * B;
 
+  std::cout << "S Unfolded:" << std::endl;
+  std::cout << S_unfolded << std::endl << std::endl;
+
   S = fold(S_unfolded, t.geometry, axis);
 
+  std::cout << "U:" << std::endl;
   Geometry matrix_geo;
   matrix_geo.push_back(Dimension(0, 0));
   matrix_geo.push_back(Dimension(0, 0));
   for(int i=0; i<t.geometry.size(); ++i) {
     UID::ID id = UID::get_id();
+    std::cout << "New ID: " << id << std::endl;
     S.geometry[i].id = id;
     matrix_geo[0].size = t.geometry[i].size;
     matrix_geo[1].size = t.geometry[i].size;
     matrix_geo[0].id = t.geometry[i].id;
     matrix_geo[1].id = id;
+    std::cout << "matrix_geo[0].id: " << matrix_geo[0].id << std::endl;
+    std::cout << "matrix_geo[1].id: " << matrix_geo[1].id << std::endl;
     U[i] = fold(transforms[i], matrix_geo, 0);
+    std::cout << "U[i].geometry[0].id: " << U[i].geometry[0].id << std::endl;
+    std::cout << "U[i].geometry[1].id: " << U[i].geometry[1].id << std::endl;
     std::cout << transforms[i] << std::endl << std::endl;
   }
 
+  std::vector<unsigned int> coord(S.geometry.size(), 0);
+
+  std::cout << "S:" << std::endl;
+  for(int i=0; i<S.geometry[0].size; ++i) {
+    coord[0] = i;
+    for(int j=0; j<S.geometry[1].size; ++j) {
+      coord[1] = j;
+      for(int k=0; k<S.geometry[2].size; ++k) {
+        coord[2] = k;
+        std::cout << S.at(coord) << " ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
 
 };
 
