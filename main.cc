@@ -1,7 +1,12 @@
 
 #include <stdlib.h>
 
+#ifndef MY_CMATH_
+#define MY_CMATH_
+#include <cmath>
+#endif
 #include <iostream>
+#include <sstream>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
@@ -11,239 +16,198 @@
 #include "redsvd/redsvd.hpp"
 #include "redsvd/util.hpp"
 
-int main() {
+int main(int argc, char * argv[]) {
+  // Define parameters
+  typedef double T;
+  T temp = 0.2;
+  unsigned int n_iterations = 2;
+  unsigned int D_cut = 24;
 
-  srand (time(NULL));
-
-
-
-  unsigned int i_s = 3;
-  unsigned int j_s = 3;
-  unsigned int k_s = 3;
-
-  Dimension i(i_s, UID::get_id());
-  Dimension j(j_s, UID::get_id());
-  Dimension k(k_s, UID::get_id());
-
-  std::vector<unsigned int> coord;
-  coord.push_back(0); coord.push_back(0); coord.push_back(0);
-
-  std::vector<Dimension> geo_2;
-  geo_2.push_back(i);
-  geo_2.push_back(j);
-  geo_2.push_back(k);
-
-  Tensor<double> t2(geo_2);
-  t2.zero();
-
-  double m2[j_s][i_s][k_s] = {
-      {
-          {0.9073, 0.7158, -0.3698},
-          {0.8924, -0.4898, 2.4288},
-          {2.1488, 0.3054, 2.3753}
-      },
-      {
-          {1.7842, 1.6970, 0.0151},
-          {1.7753, -1.5077, 4.0337},
-          {4.2495, 0.3207, 4.7146},
-      },
-      {
-          {2.1236, -0.0740, 1.4429},
-          {-0.6631, 1.9103, -1.7495},
-          {1.8260, 2.1335, -0.2716},
-      }
-  };
-
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        t2.at(coord) = m2[j][i][k];
-      }
-    }
+  if(argc > 1) {
+    std::stringstream ss(argv[1]);
+    ss >> temp;
   }
- std::cout << "Begin Element Printout:" << std::endl;
-
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        std::cout << "A[" << i << ", " << j << ", " << k << "] = " << t2.at(coord) << std::endl;
-      }
-      //std::cout << std::endl;
-    }
-    //std::cout << std::endl;
-  }
-  std::cout << std::endl;
-
-  //std::cout << unfold(t2, 0) << std::endl << std::endl;
-  //std::cout << unfold(t2, 1) << std::endl << std::endl;
-  //std::cout << unfold(t2, 2) << std::endl << std::endl;
-  //Tensor<double> repeat = fold(unfold(t2, 0), t2.geometry, 0);
-  //std::cout << unfold(repeat, 0) << std::endl;
-
-  Tensor<double> S;
-  Tensor<double> U[t2.geometry.size()];
-
-  HOSVD(t2, S, U);
-
-  std::cout << "U2:" << std::endl;
-  std::vector<Tensor<double> > t_list;
-  t_list.push_back(S);
-  for(int i=0; i<t2.geometry.size(); ++i) {
-    t_list.push_back(U[i]);
-    std::cout << unfold(U[i], 0) << std::endl << std::endl;
+  if(argc > 2) {
+    std::stringstream ss(argv[2]);
+    ss >> n_iterations;
   }
 
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        std::cout << "S[" << i << ", " << j << ", " << k << "] = " << S.at(coord) << std::endl;
-      }
-      //std::cout << std::endl;
-    }
-    //std::cout << std::endl;
-  }
-  std::cout << std::endl;
+  // Define IDs
+  UID::ID common = UID::get_id();
+  UID::ID up = UID::get_id();
+  UID::ID down = UID::get_id();
+  UID::ID left = UID::get_id();
+  UID::ID right = UID::get_id();
 
-  Tensor<double> A = Tensor<double>::contract(t_list);
+  // Define W matrix geometry
+  Geometry matrix_geo(2);
+  matrix_geo[0].size = 2;
+  matrix_geo[1].size = 2;
+  matrix_geo[0].id = common;
+  matrix_geo[1].id = 0;
 
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        std::cout << "A[" << i << ", " << j << ", " << k << "] = " << A.at(coord) << std::endl;
-      }
-      //std::cout << std::endl;
-    }
-    //std::cout << std::endl;
-  }
-  std::cout << std::endl;
+  // Define W matrix
+  Tensor<T> W(matrix_geo);
+  Coordinates coords(2, 0);
 
-  std::cout << "Index id's:" << std::endl;
-  for(int i=0; i<A.geometry.size(); ++i) {
-    std::cout << A.geometry[i].id << " ";
-  }
-  std::cout << std::endl << std::endl;
+  coords[0] = 0; coords[1] = 0; W.at(coords) = std::sqrt(std::cosh(1.0/temp));
+  coords[0] = 0; coords[1] = 1; W.at(coords) = std::sqrt(std::sinh(1.0/temp));
+  coords[0] = 1; coords[1] = 0; W.at(coords) = std::sqrt(std::cosh(1.0/temp));
+  coords[0] = 1; coords[1] = 1; W.at(coords) = -std::sqrt(std::sinh(1.0/temp));
 
   /*
-  unsigned int i_s = 2;
-  unsigned int j_s = 2;
-  unsigned int k_s = 2;
-
-  Dimension i(i_s, UID::get_id());
-  Dimension j(j_s, UID::get_id());
-  Dimension k(k_s, UID::get_id());
-
-  std::vector<unsigned int> coord(3, 0);
-
-  double m2[i_s][j_s][k_s] = {
-      {
-          {1, 2},
-          {3, 4}
-      },
-      {
-          {5, 6},
-          {7, 8}
-
-      }
-  };
-
-  std::vector<Dimension> geo_0;
-  geo_0.push_back(i);
-  geo_0.push_back(j);
-  geo_0.push_back(k);
-
-  Tensor<double> t0(geo_0);
-  t0.zero();
-
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        t0.at(coord) = m2[i][j][k];
-      }
-    }
-  }
-
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        std::cout << t0.at(coord) << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl;
-
-  std::cout << "Index id's:" << std::endl;
-  for(int i=0; i<t0.geometry.size(); ++i) {
-    std::cout << t0.geometry[i].id << " ";
-  }
-  std::cout << std::endl << std::endl;
-
-  Tensor<double> S;
-  Tensor<double> U[t0.geometry.size()];
-
-  HOSVD(t0, S, U);
-
-  std::cout << "Index id's:" << std::endl;
-  for(int i=0; i<S.geometry.size(); ++i) {
-    std::cout << S.geometry[i].id << " ";
-  }
-  std::cout << std::endl << std::endl;
-
-  std::cout << "U2:" << std::endl;
-  std::vector<Tensor<double> > t_list;
-  t_list.push_back(S);
-  for(int i=0; i<t0.geometry.size(); ++i) {
-    t_list.push_back(U[i]);
-    std::cout << unfold(U[i], 0) << std::endl << std::endl;
-    std::cout << "Index id's:" << std::endl;
-    for(int j=0; j<U[i].geometry.size(); ++j) {
-      std::cout << U[i].geometry[j].id << " ";
-    }
-    std::cout << std::endl << std::endl;
-  }
-
-  Tensor<double> A = Tensor<double>::contract(t_list);
-
-  std::cout << "A:" << std::endl;
-  for(int i=0; i<i_s; ++i) {
-    coord[0] = i;
-    for(int j=0; j<j_s; ++j) {
-      coord[1] = j;
-      for(int k=0; k<k_s; ++k) {
-        coord[2] = k;
-        std::cout << A.at(coord) << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl;
-
-  std::cout << "Index id's:" << std::endl;
-  for(int i=0; i<A.geometry.size(); ++i) {
-    std::cout << A.geometry[i].id << " ";
-  }
-  std::cout << std::endl << std::endl;
-
-  return 0;
+  coords[0] = 0; coords[1] = 0; W.at(coords) = -std::sinh(2.0/temp)/(2.0*(1.0+std::cosh(2.0/temp)));
+  coords[0] = 0; coords[1] = 1; W.at(coords) = std::sinh(2.0/temp)/(2.0*(1.0-std::cosh(2.0/temp)));
+  coords[0] = 1; coords[1] = 0; W.at(coords) = -std::sinh(2.0/temp)/(2.0*(1.0+std::cosh(2.0/temp)));
+  coords[0] = 1; coords[1] = 1; W.at(coords) = -std::sinh(2.0/temp)/(2.0*(1.0-std::cosh(2.0/temp)));
   */
+
+  // Define W matrices
+  Tensor<T> W_up = W; W_up.geometry[1].id = up;
+  Tensor<T> W_down = W; W_down.geometry[1].id = down;
+  Tensor<T> W_left = W; W_left.geometry[1].id = left;
+  Tensor<T> W_right = W; W_right.geometry[1].id = right;
+
+  // Define contraction vector
+  std::vector<Tensor<T> > contraction_tensors(4);
+  contraction_tensors[0] = W_up;
+  contraction_tensors[1] = W_down;
+  contraction_tensors[2] = W_left;
+  contraction_tensors[3] = W_right;
+
+  // Construct original tensor for square geometry
+  Tensor<T> start = Tensor<T>::contract(contraction_tensors);
+
+  Tensor<T> * current = &start;
+  Tensor<T> * next = NULL;
+
+  UID::ID up_p = UID::get_id();
+  UID::ID down_p = UID::get_id();
+  UID::ID left_p = UID::get_id();
+  UID::ID right_p = UID::get_id();
+
+  IndexGroup up_group(2);
+  up_group[0] = up;
+  up_group[1] = up_p;
+
+  IndexGroup down_group(2);
+  down_group[0] = down;
+  down_group[1] = down_p;
+
+  std::vector<IndexGroup> post_h_reduction(2);
+  post_h_reduction[0] = up_group;
+  post_h_reduction[1] = down_group;
+
+  IndexGroup left_group(2);
+  left_group[0] = left;
+  left_group[1] = left_p;
+
+  IndexGroup right_group(2);
+  right_group[0] = right;
+  right_group[1] = right_p;
+
+  std::vector<IndexGroup> post_v_reduction(2);
+  post_v_reduction[0] = left_group;
+  post_v_reduction[1] = right_group;
+
+  UID::ID index_mapping[4];
+
+  for(int i=0; i<n_iterations; ++i) {
+    Tensor<T> temp;
+    temp = *current;
+
+    index_mapping[0] = current->map()[up];
+    index_mapping[1] = current->map()[down];
+    index_mapping[2] = current->map()[left];
+    index_mapping[3] = current->map()[right];
+
+    temp.geometry[index_mapping[0]].id = up;
+    temp.geometry[index_mapping[1]].id = common;
+    temp.geometry[index_mapping[2]].id = left_p;
+    temp.geometry[index_mapping[3]].id = right_p;
+
+    current->geometry[index_mapping[0]].id = common;
+    current->geometry[index_mapping[1]].id = down;
+    current->geometry[index_mapping[2]].id = left;
+    current->geometry[index_mapping[3]].id = right;
+
+    std::vector<Tensor<T> > contraction_tensors(2);
+    contraction_tensors[0] = *current;
+    contraction_tensors[1] = temp;
+    *current = Tensor<T>::contract(contraction_tensors);
+
+    temp.destroy();
+
+    /*for(int in=0; in<temp.geometry.size(); ++in) {
+      std::cout << "Index " << in << " id = " << temp.geometry[in].id << std::endl;
+    }*/
+
+    reduce_rank(*current, post_v_reduction);
+    truncate(*current, D_cut);
+
+    /*for(int in=0; in<current->geometry.size(); ++in) {
+      std::cout << "Index " << in << " id = " << current->geometry[in].id << std::endl;
+    }*/
+
+    temp = *current;
+
+    index_mapping[0] = current->map()[up];
+    index_mapping[1] = current->map()[down];
+    index_mapping[2] = current->map()[left];
+    index_mapping[3] = current->map()[right];
+
+    temp.geometry[index_mapping[0]].id = up_p;
+    temp.geometry[index_mapping[1]].id = down_p;
+    temp.geometry[index_mapping[2]].id = common;
+    temp.geometry[index_mapping[3]].id = right;
+
+    current->geometry[index_mapping[0]].id = up;
+    current->geometry[index_mapping[1]].id = down;
+    current->geometry[index_mapping[2]].id = left;
+    current->geometry[index_mapping[3]].id = common;
+
+    contraction_tensors[0] = *current;
+    contraction_tensors[1] = temp;
+    *current = Tensor<T>::contract(contraction_tensors);
+
+    temp.destroy();
+
+    reduce_rank(*current, post_h_reduction);
+    truncate(*current, D_cut);
+
+    /*for(int in=0; in<current->geometry.size(); ++in) {
+      std::cout << "Index " << in << " id = " << current->geometry[in].id << std::endl;
+    }*/
+
+  }
+
+  index_mapping[0] = current->map()[up];
+  index_mapping[1] = current->map()[down];
+  index_mapping[2] = current->map()[left];
+  index_mapping[3] = current->map()[right];
+
+  current->geometry[index_mapping[0]].id = up;
+  current->geometry[index_mapping[1]].id = up;
+  current->geometry[index_mapping[2]].id = left;
+  current->geometry[index_mapping[3]].id = left;
+
+  contraction_tensors.clear();
+  contraction_tensors.push_back(*current);
+  Tensor<T> result = Tensor<T>::contract(contraction_tensors);
+
+  //std::cout << "result geometry size: " << result.geometry.size() << std::endl;
+  std::cout << "result value: " << result.elements[0] << std::endl;
+
 }
+
+
+
+
+
+
+
+
+
+
+
+

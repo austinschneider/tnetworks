@@ -52,6 +52,18 @@ T & Tensor<T>::at(ContractionIterator & it) {
 }
 
 template <class T>
+std::map<unsigned int, unsigned int> & Tensor<T>::map() {
+  if(index_map.size() != geometry.size()) {
+    index_map.clear();
+    for(int i=0; i<geometry.size(); ++i) {
+      index_map[geometry[i].id] = i;
+    }
+  }
+
+  return index_map;
+}
+
+template <class T>
 void Tensor<T>::zero() {
   std::memset(elements, 0, sizeof(elements));
 }
@@ -79,6 +91,11 @@ Tensor<T>::~Tensor() {
 }
 
 template <class T>
+void Tensor<T>::destroy() {
+  delete[] elements;
+}
+
+template <class T>
 Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
   typedef Dimension::ID ID;
   std::map<ID, unsigned int> original_indices;
@@ -102,6 +119,12 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
     }
   }
 
+  if(unique_indices_set.size() == 0) { // Is the result a scalar?
+    UID::ID scalar_id = UID::get_id();
+    original_indices[scalar_id] = 1;
+    unique_indices_set.insert(scalar_id);
+  }
+
   ContractionIterator c_it;
   c_it.n_unique_indices = unique_indices_set.size();
   for(std::set<ID>::iterator it = unique_indices_set.begin(); it != unique_indices_set.end(); ++it) {
@@ -120,6 +143,7 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
 
   T * total = NULL;
 
+  /*
   for(int t_i=0; t_i<tensors.size(); ++t_i) {
     std::cout << "Tensor" << t_i << ": ";
     for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
@@ -127,6 +151,7 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
     }
     std::cout << std::endl;
   }
+  */
 
   //UID::ID a = tensors[0].geometry[0].id;
   //tensors[0].geometry[0].id = tensors[0].geometry[2].id;
@@ -136,14 +161,14 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
   unsigned int add_count = 0;
   int unique_element = -1;
   for(; c_it.is_done == false; ++c_it) {
-    for(int i=0; i<c_it.indices.size(); ++i)
-      std::cout << c_it.indices[i].id << ": " << c_it.indices_map[c_it.indices[i].id] << ", ";
-    std::cout << std::endl;
+    //for(int i=0; i<c_it.indices.size(); ++i)
+    //  std::cout << c_it.indices[i].id << ": " << c_it.indices_map[c_it.indices[i].id] << ", ";
+    //std::cout << std::endl;
     if(c_it.last_is_unique) {
-      if(unique_element >= 0) {
-        std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
-        std::cout << *total << std::endl;
-      }
+      //if(unique_element >= 0) {
+      //  std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
+      //  std::cout << *total << std::endl;
+      //}
       multiply_count = 0;
       add_count = 0;
       ++unique_element;
@@ -151,19 +176,19 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
     }
 
     T product = 1;
-    std::cout << "\t";
+    //std::cout << "\t";
     for(int t_i=0; t_i<tensors.size(); ++t_i) {
       T temp = tensors[t_i].at(c_it);
-      std::cout << temp << " * ";
+      //std::cout << temp << " * ";
       product *= temp;
       ++multiply_count;
     }
-    std::cout << std::endl << "\t\t+" << std::endl;
+    //std::cout << std::endl << "\t\t+" << std::endl;
     (*total) += product;
     ++add_count;
   }
-  std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
-  std::cout << *total << std::endl;
+  //std::cout << "For element " << unique_element << ", add: " << add_count << ", multiply: " << multiply_count << std::endl;
+  //std::cout << *total << std::endl;
   return result;
 }
 

@@ -7,6 +7,8 @@ struct Dimension {
   ID id;
   Dimension();
   Dimension(unsigned int, ID);
+  Dimension(const Dimension &);
+  ~Dimension();
 };
 
 #endif

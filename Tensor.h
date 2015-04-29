@@ -13,9 +13,12 @@ template <class T>
 struct Tensor {
   T * elements;
   Geometry geometry;
+  std::map<unsigned int, unsigned int> index_map;
   unsigned int size();
   T & at(Coordinates &);
   T & at(ContractionIterator &);
+
+  std::map<unsigned int, unsigned int> & map();
 
   void zero();
 
@@ -23,6 +26,8 @@ struct Tensor {
   Tensor(Geometry &);
   Tensor(const Tensor<T> &);
   ~Tensor();
+
+  void destroy();
 
   static Tensor<T> contract(std::vector<Tensor<T> > &);
 };

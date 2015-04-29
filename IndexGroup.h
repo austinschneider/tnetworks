@@ -13,7 +13,12 @@ struct IndexGroup {
 
   Index & operator[](unsigned int a);
   IndexGroup(unsigned int size);
-  void set_sister(IndexGroup *);
+  IndexGroup();
+  IndexGroup(const IndexGroup &);
+  ~IndexGroup();
+
+  void destroy();
+  IndexGroup copy();
 };
 
 #endif
