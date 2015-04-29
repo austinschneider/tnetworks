@@ -28,6 +28,7 @@ struct Tensor {
   ~Tensor();
 
   void destroy();
+  Tensor<T> copy();
 
   static Tensor<T> contract(std::vector<Tensor<T> > &);
 };

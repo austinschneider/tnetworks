@@ -42,8 +42,12 @@ T & Tensor<T>::at(ContractionIterator & it) {
     if(m_it == it.indices_map.end())
       std::cout << "ERROR: ContractionIterator does not contain index!" << std::endl;
     else {
-      if(m_it->second >= geometry[i].size)
+      if(m_it->second >= geometry[i].size) {
         std::cout << "ERROR: Out of bounds coordinate!" << std::endl;
+        std::cout << "Position " << i << std::endl;
+        std::cout << "Tried to access " << m_it->second << std::endl;
+        std::cout << "Dimension has size " << geometry[i].size << std::endl;
+      }
       total += product*m_it->second;
       product *= geometry[i].size;
     }
@@ -96,19 +100,52 @@ void Tensor<T>::destroy() {
 }
 
 template <class T>
+Tensor<T> Tensor<T>::copy() {
+  Tensor<T> copy;
+  copy = *this;
+  unsigned int size = this->size();
+  copy.elements = new T[size];
+  for(int i=0; i<size; ++i) {
+    copy.elements[i] = this->elements[i];
+  }
+  return copy;
+}
+
+template <class T>
 Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Dimension::ID ID;
+
+  /*std::cout << std::endl;
+  std::cout << "Tensors to be contracted" << std::endl;
+  for(int t_i=0; t_i<tensors.size(); ++t_i) {
+    std::cout << "Tensor" << t_i << ": ";
+    for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
+      std::cout << "(" << tensors[t_i].geometry[dim_i].id << "," << tensors[t_i].geometry[dim_i].size << ") ";
+    }
+    std::cout << std::endl;
+  }*/
+
   std::map<ID, unsigned int> original_indices;
 
   std::set<ID> unique_indices_set;
   std::set<ID> contracted_indices_set;
 
+  unsigned int contraction_size = 1;
+
   for(int t_i=0; t_i<tensors.size(); ++t_i) {
     for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
+      std::cout << "dimension size: " << tensors[t_i].geometry[dim_i].size << std::endl;
+      contraction_size *= tensors[t_i].geometry[dim_i].size;
       Dimension & dim = tensors[t_i].geometry[dim_i];
       if(original_indices.find(dim.id) != original_indices.end()) {
-        if(dim.size != original_indices[dim.id])
+        if(dim.size != original_indices[dim.id]) {
           std::cout << "ERROR: Contracted index sizes do not match!" << std::endl;
+          std::cout << "dim.size: " << dim.size << " original_indices[dim.id]: " << original_indices[dim.id] << std::endl;
+          std::cout << "dim.id: " << dim.id << std::endl;
+          std::cout << std::flush;
+          gdb();
+        }
         unique_indices_set.erase(dim.id);
         contracted_indices_set.insert(dim.id);
       }
@@ -118,6 +155,8 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
       }
     }
   }
+
+  std::cout << "Contraction of size: " << contraction_size << std::endl;
 
   if(unique_indices_set.size() == 0) { // Is the result a scalar?
     UID::ID scalar_id = UID::get_id();
@@ -143,15 +182,15 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
 
   T * total = NULL;
 
-  /*
-  for(int t_i=0; t_i<tensors.size(); ++t_i) {
+
+  /*for(int t_i=0; t_i<tensors.size(); ++t_i) {
     std::cout << "Tensor" << t_i << ": ";
     for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
       std::cout << tensors[t_i].geometry[dim_i].id << " ";
     }
     std::cout << std::endl;
-  }
-  */
+  }*/
+
 
   //UID::ID a = tensors[0].geometry[0].id;
   //tensors[0].geometry[0].id = tensors[0].geometry[2].id;

@@ -7,7 +7,7 @@ EXECNAME    = main
 
 # default compiler settings
 CC          =  g++
-OPT         = -O1
+OPT         = -O3
 LDFLAGS     = -lm
 
 SRC         = *.cc

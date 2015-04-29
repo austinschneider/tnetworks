@@ -17,6 +17,7 @@
 #include "redsvd/util.hpp"
 
 int main(int argc, char * argv[]) {
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
   // Define parameters
   typedef double T;
   T temp = 0.2;
@@ -138,16 +139,16 @@ int main(int argc, char * argv[]) {
 
     temp.destroy();
 
-    /*for(int in=0; in<temp.geometry.size(); ++in) {
-      std::cout << "Index " << in << " id = " << temp.geometry[in].id << std::endl;
-    }*/
+    //for(int in=0; in<temp.geometry.size(); ++in) {
+    //  std::cout << "Index " << in << " id = " << temp.geometry[in].id << std::endl;
+    //}
 
     reduce_rank(*current, post_v_reduction);
     truncate(*current, D_cut);
 
-    /*for(int in=0; in<current->geometry.size(); ++in) {
-      std::cout << "Index " << in << " id = " << current->geometry[in].id << std::endl;
-    }*/
+    //for(int in=0; in<current->geometry.size(); ++in) {
+    //  std::cout << "Index " << in << " id = " << current->geometry[in].id << std::endl;
+    //}
 
     temp = *current;
 
