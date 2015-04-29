@@ -38,7 +38,7 @@ void coordinate_transform(Geometry &, Geometry &, std::vector<IndexGroup> &, Coo
 
 template <class T>
 void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   std::set<unsigned int> unchanged_indices;
 
   for(int i=0; i<t.geometry.size(); ++i) {
@@ -150,7 +150,7 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
 
 template <class T>
 Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned int dim) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   unsigned int dim_size = t.geometry[dim].size;
   unsigned int m_dim_size = t.size() / dim_size;
@@ -184,7 +184,7 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned 
 
 template <class T>
 Tensor<T> fold(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix, Geometry & geometry, unsigned int dim) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   unsigned int dim_size = matrix.rows();
   unsigned int m_dim_size = matrix.cols();
@@ -215,7 +215,7 @@ Tensor<T> fold(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix, Geometry
 
 template <class T>
 void get_HOSVD_U(Tensor<T> & t, Tensor<T> & U, unsigned int index_pos) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   M A = unfold(t, index_pos);
   Geometry matrix_geo;
@@ -229,7 +229,7 @@ void get_HOSVD_U(Tensor<T> & t, Tensor<T> & U, unsigned int index_pos) {
 
 template <class T>
 void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
   M transforms[t.geometry.size()];
   //std::cout << "Unfolded:" << std::endl;
@@ -298,7 +298,7 @@ void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
 
 template <class T>
 T calculate_cut_norm(Tensor<T> & t, unsigned int index_pos, unsigned int D_cut) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Dimension::ID ID;
   if(t.geometry[index_pos].size <= D_cut)
     return 0;
@@ -325,7 +325,7 @@ T calculate_cut_norm(Tensor<T> & t, unsigned int index_pos, unsigned int D_cut) 
 
 template <class T>
 void truncate(Tensor<T> & t, unsigned int D_cut) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Dimension::ID ID;
   std::map<unsigned int, unsigned int> sizes; // map index size to position in truncation sets
   std::vector<std::set<unsigned int> *> truncation_sets; // sets of positions to truncate
@@ -383,8 +383,8 @@ void truncate(Tensor<T> & t, unsigned int D_cut) {
       trunc_coords[0] = trunc_i;
       for(int trunc_j=0; trunc_j<D_cut; ++trunc_j) {
         trunc_coords[1] = trunc_j;
-        std::cout << "original_truncation_matrix.geometry.size(): " << original_truncation_matrix.geometry.size() << std::endl;
-        std::cout << "U[current->map()[min_norm_id]].geometry.size(): " << U[current->map()[min_norm_id]].geometry.size() << std::endl;
+        //std::cout << "original_truncation_matrix.geometry.size(): " << original_truncation_matrix.geometry.size() << std::endl;
+        //std::cout << "U[current->map()[min_norm_id]].geometry.size(): " << U[current->map()[min_norm_id]].geometry.size() << std::endl;
         original_truncation_matrix.at(trunc_coords) = U[U_map[min_norm_id]].at(trunc_coords);
       }
     }
@@ -407,9 +407,9 @@ void truncate(Tensor<T> & t, unsigned int D_cut) {
       contraction_tensors[0] = *current;
       contraction_tensors[1] = truncation_matrices[t_set_i];
 
-      std::cout << "To contract for truncation:" << std::endl;
-      std::cout << "id: " << contraction_tensors[0].geometry[id_pos].id << " == " << contraction_tensors[1].geometry[0].id << std::endl;
-      std::cout << "size: " << contraction_tensors[0].geometry[id_pos].size << " == " << contraction_tensors[1].geometry[0].size << std::endl;
+      //std::cout << "To contract for truncation:" << std::endl;
+      //std::cout << "id: " << contraction_tensors[0].geometry[id_pos].id << " == " << contraction_tensors[1].geometry[0].id << std::endl;
+      //std::cout << "size: " << contraction_tensors[0].geometry[id_pos].size << " == " << contraction_tensors[1].geometry[0].size << std::endl;
 
       next = new Tensor<T>();
       *next = Tensor<T>::contract(contraction_tensors);

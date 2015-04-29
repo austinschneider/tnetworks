@@ -113,7 +113,7 @@ Tensor<T> Tensor<T>::copy() {
 
 template <class T>
 Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Dimension::ID ID;
 
   /*std::cout << std::endl;
@@ -131,12 +131,12 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
   std::set<ID> unique_indices_set;
   std::set<ID> contracted_indices_set;
 
-  unsigned int contraction_size = 1;
+  //unsigned int contraction_size = 1;
 
   for(int t_i=0; t_i<tensors.size(); ++t_i) {
     for(int dim_i=0; dim_i<tensors[t_i].geometry.size(); ++dim_i) {
-      std::cout << "dimension size: " << tensors[t_i].geometry[dim_i].size << std::endl;
-      contraction_size *= tensors[t_i].geometry[dim_i].size;
+      //std::cout << "dimension size: " << tensors[t_i].geometry[dim_i].size << std::endl;
+      //contraction_size *= tensors[t_i].geometry[dim_i].size;
       Dimension & dim = tensors[t_i].geometry[dim_i];
       if(original_indices.find(dim.id) != original_indices.end()) {
         if(dim.size != original_indices[dim.id]) {
@@ -156,7 +156,7 @@ Tensor<T> Tensor<T>::contract(std::vector<Tensor<T> > & tensors) {
     }
   }
 
-  std::cout << "Contraction of size: " << contraction_size << std::endl;
+  //std::cout << "Contraction of size: " << contraction_size << std::endl;
 
   if(unique_indices_set.size() == 0) { // Is the result a scalar?
     UID::ID scalar_id = UID::get_id();

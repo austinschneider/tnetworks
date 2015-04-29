@@ -17,7 +17,7 @@
 #include "redsvd/util.hpp"
 
 int main(int argc, char * argv[]) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  //std::cout << __PRETTY_FUNCTION__ << std::endl;
   // Define parameters
   typedef double T;
   T temp = 0.2;
@@ -134,10 +134,10 @@ int main(int argc, char * argv[]) {
     start.geometry[start_index_mapping[2]].id = left_p;
     start.geometry[start_index_mapping[3]].id = right_p;
 
-    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    /*std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
     std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
     std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
-    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;*/
 
     current->geometry[index_mapping[0]].id = common;
     current->geometry[index_mapping[1]].id = down;
@@ -156,10 +156,10 @@ int main(int argc, char * argv[]) {
     //}
 
     reduce_rank(*current, post_v_reduction);
-    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    /*std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
     std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
     std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
-    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;*/
     truncate(*current, D_cut);
 
     //for(int in=0; in<current->geometry.size(); ++in) {
@@ -170,14 +170,14 @@ int main(int argc, char * argv[]) {
   start.destroy();
   start = current->copy();
 
-  std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
+  //std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
 
   start_index_mapping[0] = start.map()[up];
   start_index_mapping[1] = start.map()[down];
   start_index_mapping[2] = start.map()[left];
   start_index_mapping[3] = start.map()[right];
 
-  std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
+  //std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
 
   for(int i=0; i<n_iterations-1; ++i) {
     Tensor<T> temp;
@@ -193,10 +193,10 @@ int main(int argc, char * argv[]) {
     start.geometry[start_index_mapping[2]].id = common;
     start.geometry[start_index_mapping[3]].id = right;
 
-    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    /*std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
     std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
     std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
-    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;*/
 
     current->geometry[index_mapping[0]].id = up;
     current->geometry[index_mapping[1]].id = down;
@@ -211,10 +211,10 @@ int main(int argc, char * argv[]) {
     temp.destroy();
 
     reduce_rank(*current, post_h_reduction);
-    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    /*std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
     std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
     std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
-    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;*/
     truncate(*current, D_cut);
 
     /*for(int in=0; in<current->geometry.size(); ++in) {
