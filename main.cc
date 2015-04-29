@@ -79,7 +79,8 @@ int main(int argc, char * argv[]) {
   // Construct original tensor for square geometry
   Tensor<T> start = Tensor<T>::contract(contraction_tensors);
 
-  Tensor<T> * current = &start;
+  Tensor<T> * current = new Tensor<T>;
+  *current = start.copy();
   Tensor<T> * next = NULL;
 
   UID::ID up_p = UID::get_id();
@@ -112,8 +113,14 @@ int main(int argc, char * argv[]) {
   post_v_reduction[1] = right_group;
 
   UID::ID index_mapping[4];
+  UID::ID start_index_mapping[4];
 
-  for(int i=0; i<n_iterations; ++i) {
+  start_index_mapping[0] = start.map()[up];
+  start_index_mapping[1] = start.map()[down];
+  start_index_mapping[2] = start.map()[left];
+  start_index_mapping[3] = start.map()[right];
+
+  for(int i=0; i<n_iterations-1; ++i) {
     Tensor<T> temp;
     temp = *current;
 
@@ -122,10 +129,15 @@ int main(int argc, char * argv[]) {
     index_mapping[2] = current->map()[left];
     index_mapping[3] = current->map()[right];
 
-    temp.geometry[index_mapping[0]].id = up;
-    temp.geometry[index_mapping[1]].id = common;
-    temp.geometry[index_mapping[2]].id = left_p;
-    temp.geometry[index_mapping[3]].id = right_p;
+    start.geometry[start_index_mapping[0]].id = up;
+    start.geometry[start_index_mapping[1]].id = common;
+    start.geometry[start_index_mapping[2]].id = left_p;
+    start.geometry[start_index_mapping[3]].id = right_p;
+
+    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
+    std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
 
     current->geometry[index_mapping[0]].id = common;
     current->geometry[index_mapping[1]].id = down;
@@ -134,7 +146,7 @@ int main(int argc, char * argv[]) {
 
     std::vector<Tensor<T> > contraction_tensors(2);
     contraction_tensors[0] = *current;
-    contraction_tensors[1] = temp;
+    contraction_tensors[1] = start;
     *current = Tensor<T>::contract(contraction_tensors);
 
     temp.destroy();
@@ -144,12 +156,31 @@ int main(int argc, char * argv[]) {
     //}
 
     reduce_rank(*current, post_v_reduction);
+    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
+    std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
     truncate(*current, D_cut);
 
     //for(int in=0; in<current->geometry.size(); ++in) {
     //  std::cout << "Index " << in << " id = " << current->geometry[in].id << std::endl;
     //}
+  }
 
+  start.destroy();
+  start = current->copy();
+
+  std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
+
+  start_index_mapping[0] = start.map()[up];
+  start_index_mapping[1] = start.map()[down];
+  start_index_mapping[2] = start.map()[left];
+  start_index_mapping[3] = start.map()[right];
+
+  std::cout << "start.geometry.size() = " << start.geometry.size() << std::endl;
+
+  for(int i=0; i<n_iterations-1; ++i) {
+    Tensor<T> temp;
     temp = *current;
 
     index_mapping[0] = current->map()[up];
@@ -157,23 +188,33 @@ int main(int argc, char * argv[]) {
     index_mapping[2] = current->map()[left];
     index_mapping[3] = current->map()[right];
 
-    temp.geometry[index_mapping[0]].id = up_p;
-    temp.geometry[index_mapping[1]].id = down_p;
-    temp.geometry[index_mapping[2]].id = common;
-    temp.geometry[index_mapping[3]].id = right;
+    start.geometry[start_index_mapping[0]].id = up_p;
+    start.geometry[start_index_mapping[1]].id = down_p;
+    start.geometry[start_index_mapping[2]].id = common;
+    start.geometry[start_index_mapping[3]].id = right;
+
+    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
+    std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
 
     current->geometry[index_mapping[0]].id = up;
     current->geometry[index_mapping[1]].id = down;
     current->geometry[index_mapping[2]].id = left;
     current->geometry[index_mapping[3]].id = common;
 
+    std::vector<Tensor<T> > contraction_tensors(2);
     contraction_tensors[0] = *current;
-    contraction_tensors[1] = temp;
+    contraction_tensors[1] = start;
     *current = Tensor<T>::contract(contraction_tensors);
 
     temp.destroy();
 
     reduce_rank(*current, post_h_reduction);
+    std::cout << "up    " << current->geometry[index_mapping[0]].size << std::endl;
+    std::cout << "down  " << current->geometry[index_mapping[1]].size << std::endl;
+    std::cout << "left  " << current->geometry[index_mapping[2]].size << std::endl;
+    std::cout << "right " << current->geometry[index_mapping[3]].size << std::endl;
     truncate(*current, D_cut);
 
     /*for(int in=0; in<current->geometry.size(); ++in) {
