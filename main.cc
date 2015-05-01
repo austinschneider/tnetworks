@@ -197,6 +197,7 @@ int main(int argc, char * argv[]) {
   Tensor<T> result = Tensor<T>::contract(contraction_tensors);
 
   //std::cout << "result geometry size: " << result.geometry.size() << std::endl;
+  std::cout.precision(15);
   std::cout << "result value: " << result.elements[0] << std::endl;
 
 }

@@ -11,6 +11,7 @@
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Sparse>
 #include <eigen3/unsupported/Eigen/KroneckerProduct>
 
 //#include "redsvd/redsvd.hpp"
@@ -166,16 +167,13 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> unfold(Tensor<T> & t, unsigned 
 
   M result(dim_size, m_dim_size);
 
-  Coordinates coords_nd[m_dim_size];
   for(int j=0; j<m_dim_size; ++j) {
-    coords_nd[j] = coordinate_transoform_1d_to_nd(g, j);
-    coords_nd[j].insert(coords_nd[j].begin()+dim, 0);
-  }
-
-  for(int i=0; i<dim_size; ++i) {
-    for(int j=0; j<m_dim_size; ++j) {
-      coords_nd[j][dim] = i;
-      result(i,j) = t.at(coords_nd[j]);
+    Coordinates coords_nd_j;
+    coords_nd_j = coordinate_transoform_1d_to_nd(g, j);
+    coords_nd_j.insert(coords_nd_j.begin()+dim, 0);
+    for(int i=0; i<dim_size; ++i) {
+      coords_nd_j[dim] = i;
+      result(i,j) = t.at(coords_nd_j);
     }
   }
 
@@ -231,6 +229,7 @@ template <class T>
 void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
   std::cout << __PRETTY_FUNCTION__ << std::endl;
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M;
+  typedef Eigen::SparseMatrix<T> MSparse;
   M transforms[t.geometry.size()];
   //std::cout << "Unfolded:" << std::endl;
   for(int i=0; i<t.geometry.size(); ++i) {
@@ -242,12 +241,28 @@ void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
 
   unsigned int axis = 0;
   M t_unfolded = unfold(t, axis);
-  M B(1,1);
-  B(0,0) = 1;
+  M B_dense(1,1);
+  B_dense(0,0) = 1;
+  MSparse * B0;
+  MSparse * B1;
+  MSparse Btemp0 = B_dense.sparseView();
+  MSparse Btemp1;
+  MSparse * BB = & Btemp0;
+  bool is_B0 = true;
   for(int i=0; i<t.geometry.size(); ++i) {
-    if(i != axis)
-      B = kroneckerProduct(B,transforms[i]).eval();
+    if(i != axis) {
+      if(is_B0) {
+        Btemp1 = kroneckerProduct(Btemp0,transforms[i].sparseView());
+        BB = & Btemp1;
+      }
+      else {
+        Btemp0 = kroneckerProduct(Btemp1,transforms[i].sparseView());
+        BB = & Btemp0;
+      }
+    }
   }
+
+  MSparse & B = *BB;
 
   M S_unfolded = transforms[axis].adjoint() * t_unfolded * B;
 
@@ -275,6 +290,8 @@ void HOSVD(Tensor<T> & t, Tensor<T> & S, Tensor<T> * U) {
     //std::cout << "U[i].geometry[1].id: " << U[i].geometry[1].id << std::endl;
     //std::cout << transforms[i] << std::endl << std::endl;
   }
+
+  delete BB;
 
   /*
   std::vector<unsigned int> coord(S.geometry.size(), 0);
