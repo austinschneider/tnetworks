@@ -58,7 +58,7 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
   for(int i=0; i<reductions.size(); ++i) {
     IndexGroup ig = reductions[i].copy();
     ig.is_forward = false;
-    IndexGroup::Index min;
+    IndexGroup::Index min = 0;
     for(int r_i=0; r_i<ig.size; ++r_i) {
       if(ig[r_i] < min || r_i == 0) {
         min = ig[r_i];
