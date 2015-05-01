@@ -43,19 +43,19 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
     }
   }
 
-  std::vector<IndexGroup> igs;
-  std::map<UID::ID, unsigned int> map_ids_to_igs;
+  //std::vector<IndexGroup> igs;
+  //std::map<UID::ID, unsigned int> map_ids_to_igs;
 
-  for(std::set<unsigned int>::iterator it = unchanged_indices.begin(); it != unchanged_indices.end(); ++it) {
+  /*for(std::set<unsigned int>::iterator it = unchanged_indices.begin(); it != unchanged_indices.end(); ++it) {
     IndexGroup ig(1);
     ig.is_forward = true;
     ig.index = *it;
     (*ig.indices) = *it;
     map_ids_to_igs[ig.index] = igs.size();
     igs.push_back(ig);
-  }
+  }*/
 
-  for(int i=0; i<reductions.size(); ++i) {
+  /*for(int i=0; i<reductions.size(); ++i) {
     IndexGroup ig = reductions[i].copy();
     ig.is_forward = false;
     IndexGroup::Index min = 0;
@@ -67,12 +67,13 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
     ig.index = min;
     map_ids_to_igs[ig.index] = igs.size();
     igs.push_back(ig);
-  }
+  }*/
 
-  std::map<unsigned int, unsigned int> & init_map = t.map();
+  //std::map<unsigned int, unsigned int> & init_map = t.map();
 
   Geometry final_g;
-  for(int i=0; i<t.geometry.size(); ++i) {
+  Geometry temp_g;
+  /*for(int i=0; i<t.geometry.size(); ++i) {
     if(map_ids_to_igs.find(t.geometry[i].id) != map_ids_to_igs.end()) {
       unsigned size = 1;
       IndexGroup & ig = igs[map_ids_to_igs[t.geometry[i].id]];
@@ -81,12 +82,36 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
       }
       final_g.push_back(Dimension(size,t.geometry[i].id));
     }
+  }*/
+
+  for(int i=0; i<reductions.size(); ++i) {
+	  T total_size = 1.0;
+	  IndexGroup::Index min = 0;
+	  for(int j=0; j<reductions[i].size; ++j) {
+		  UID::ID r_id = reductions[i][j];
+		  if(r_id < min || j == 0) {
+			  min = r_id;
+		  }
+		  unsigned int r_size = t.geometry[t.map()[r_id]].size;
+		  total_size *= r_size;
+		  temp_g.push_back(Dimension(r_size, r_id));
+	  }
+	  final_g.push_back(Dimension(total_size, min));
   }
 
-  Tensor<T> result(final_g);
+  Tensor<T> result(temp_g);
 
   Coordinates init_coords(t.geometry.size(), 0);
-  Coordinates final_coords(result.geometry.size(), 0);
+  Coordinates temp_coords(result.geometry.size(), 0);
+
+  if(t.geometry.size() != result.geometry.size()) {
+	  std::cout << "ERROR: reduction mapping size does not match!" << std::endl;
+  }
+
+  unsigned int * coord_mapping_init_to_temp = new unsigned int[t.geometry.size()];
+  for(int i=0; i<t.geometry.size(); ++i) {
+	  coord_mapping_init_to_temp[i] = result.map()[t.geometry[i].id];
+  }
 
   // Check is for NULL pointers
   /*for(int i=0; i<igs.size(); ++i) {
@@ -107,7 +132,7 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
     //  std::cout << init_coords[c] << " ";
     //}
     //std::cout << std::endl;
-    coordinate_transform(t, result, igs, init_coords, final_coords);
+    //coordinate_transform(t, result, igs, init_coords, final_coords);
 
     //for(int c=0; c<final_g.size(); ++c) {
     //  std::cout << final_g[c].size << " ";
@@ -117,7 +142,7 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
     //  std::cout << final_coords[c] << " ";
     //}
     //std::cout << std::endl;
-    result.at(final_coords) = t.at(init_coords);
+    result.at(temp_coords) = t.at(init_coords);
     // Increment init_coords
     for(int i=init_coords.size()-1; i>=0; --i) {
       Dimension & dim = t.geometry[i];
@@ -130,12 +155,12 @@ void reduce_rank(Tensor<T> & t, std::vector<IndexGroup> & reductions) {
       else {
         break;
       }
+      temp_coords[coord_mapping_init_to_temp[i]] = init_coords[i];
     }
   }
 
-  for(int i=0; i<igs.size(); ++i) {
-    igs[i].destroy();
-  }
+  result.geometry = final_g;
+  result.index_map.clear();
 
   t.destroy();
   t = result;
